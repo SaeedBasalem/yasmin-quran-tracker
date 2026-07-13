@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>جدول متابعة حفظ القرآن — ياسمين</title>
+<script>
+/* favicon: أيقونة المصحف */
+(function(){
+  const svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>"+
+    "<rect x='11' y='9' width='42' height='47' rx='5' fill='#EFE7CE'/>"+
+    "<rect x='14' y='6' width='38' height='52' rx='6' fill='#1B5E3F' stroke='#14512F' stroke-width='1.4'/>"+
+    "<rect x='47' y='6' width='5' height='52' rx='2.5' fill='#0f3f28'/>"+
+    "<rect x='19' y='11' width='28' height='42' rx='3' fill='none' stroke='#D4AF37' stroke-width='1.5'/>"+
+    "<g transform='translate(33,32)' fill='none' stroke='#D4AF37' stroke-width='1.7'>"+
+    "<rect x='-7.5' y='-7.5' width='15' height='15' rx='1'/>"+
+    "<rect x='-7.5' y='-7.5' width='15' height='15' rx='1' transform='rotate(45)'/></g>"+
+    "<circle cx='33' cy='32' r='2.3' fill='#D4AF37'/></svg>";
+  const link = document.createElement('link');
+  link.rel = 'icon'; link.type = 'image/svg+xml';
+  link.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
+  document.head.appendChild(link);
+})();
+</script>
+<style>
+  :root{
+    --green:#1B5E3F; --green2:#2E7D57; --gold:#B8860B; --gold-l:#E9DCB8;
+    --lightg:#E4F0E8; --cream:#FBF8EF; --row-alt:#F0F6F1; --ink:#223026;
+    --border:#C9D6CD; --red:#B4544F;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:"Segoe UI","Tahoma",Arial,sans-serif; background:#EDF2ED; color:var(--ink); margin:0; padding:20px 16px; line-height:1.6;}
+  .sheet{max-width:1180px; margin:0 auto; background:#fff; padding:34px 40px 44px; box-shadow:0 6px 30px rgba(0,0,0,.10); border-radius:10px; border-top:6px solid var(--gold);}
+  .basmala{text-align:center; color:var(--gold); font-weight:700; font-size:19px; margin:0 0 4px;}
+  h1{text-align:center; color:var(--green); font-size:30px; margin:2px 0 4px; font-weight:800;}
+  .hadith{text-align:center; color:var(--green2); font-style:italic; font-size:16px; margin:0 0 6px;}
+  .divider{text-align:center; color:var(--gold); margin:6px 0 18px; letter-spacing:3px;}
+
+  .toolbar{position:sticky; top:0; z-index:20; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center; background:#EDF2ED; padding:12px; margin:-8px auto 16px; max-width:1180px; border-radius:8px;}
+  .toolbar button{font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; border:none; border-radius:7px; padding:9px 15px; color:#fff; background:var(--green); transition:.15s; display:flex; align-items:center; gap:6px;}
+  .toolbar button:hover{background:var(--green2);}
+  .toolbar button.gold{background:var(--gold);} .toolbar button.gold:hover{background:#a2790a;}
+  .toolbar button.ghost{background:#fff; color:var(--green); border:1.5px solid var(--green);}
+  .toolbar button.ghost:hover{background:var(--lightg);}
+  .toolbar select{font-family:inherit; font-size:14px; padding:8px 10px; border-radius:7px; border:1.5px solid var(--green); color:var(--green); background:#fff; font-weight:600;}
+  .saved-note{font-size:13px; color:var(--green2); min-width:90px;}
+
+  .info{display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:14px;}
+  .info .field{background:var(--lightg); border:1px solid var(--green2); border-radius:8px; padding:10px 14px; display:flex; align-items:center; gap:8px;}
+  .info label{font-weight:700; color:var(--green); white-space:nowrap;}
+  .info input{flex:1; border:none; background:transparent; font-family:inherit; font-size:15px; color:var(--ink); min-width:0;}
+  .info input:focus{outline:none; border-bottom:1.5px dashed var(--gold);}
+
+  .progress-panel{background:linear-gradient(135deg,#f6fbf7,#eef7f0); border:1.5px solid var(--green2); border-radius:10px; padding:14px 18px; margin-bottom:14px;}
+  .progress-panel .row{display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-bottom:10px;}
+  .progress-panel label{font-weight:700; color:var(--green);}
+  .progress-panel input[type=number]{width:80px; padding:6px 8px; border:1px solid var(--green2); border-radius:6px; font-family:inherit; text-align:center;}
+  .progress-panel input[type=text]{flex:1; min-width:120px; padding:6px 10px; border:1px solid var(--green2); border-radius:6px; font-family:inherit;}
+  .bar{height:22px; background:#dfeae1; border-radius:12px; overflow:hidden; position:relative; border:1px solid #cfe0d5;}
+  .bar > div{height:100%; background:linear-gradient(90deg,var(--green2),var(--gold)); width:0; transition:width .4s;}
+  .bar span{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#123;}
+  .prog-meta{font-size:13.5px; color:var(--green); font-weight:600;}
+
+  .sec-title{color:var(--green); font-weight:800; font-size:20px; margin:26px 0 12px; border-bottom:2px solid var(--gold); padding-bottom:6px;}
+  .sec-note{color:#55665C; font-size:14px; margin:-4px 0 12px;}
+
+  table{width:100%; border-collapse:collapse; table-layout:fixed;}
+  th{background:var(--green); color:#fff; font-weight:700; font-size:14px; padding:10px 6px; border:1px solid var(--green); text-align:center;}
+  td{border:1px solid var(--border); padding:6px; font-size:14px; text-align:center; vertical-align:middle;}
+  tbody tr:nth-child(even){background:var(--row-alt);}
+  .day{font-weight:700; color:var(--green); white-space:nowrap;}
+  td[contenteditable]{cursor:text; min-height:34px;}
+  td[contenteditable]:focus{outline:2px solid var(--gold-l); background:#fffdf5;}
+  td.date-cell{font-weight:700; color:var(--green);}
+  td.g-mumtaz{background:#d6ecdd !important; color:#14512f; font-weight:700;}
+  td.g-jj{background:#e5f3e9 !important; color:#1f6b45; font-weight:700;}
+  td.g-jayed{background:#f6eccf !important; color:#8a6608; font-weight:700;}
+  td.g-redo{background:#f4dad8 !important; color:#963f3b; font-weight:700;}
+
+  .stars{font-size:18px; letter-spacing:2px; cursor:pointer; user-select:none; color:#cbd5cd;}
+  .stars .on{color:var(--gold);}
+  .wird{width:20px; height:20px; accent-color:var(--green); cursor:pointer;}
+
+  .legend{background:var(--cream); border:1px solid var(--gold-l); border-radius:8px; padding:12px 16px; font-size:13.5px; color:#55665C; margin-top:12px;}
+  .legend b{color:var(--green);}
+
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:14px;}
+  .stat{background:var(--lightg); border:1px solid var(--green2); border-radius:9px; padding:12px 8px; text-align:center;}
+  .stat .num{font-size:24px; font-weight:800; color:var(--green);}
+  .stat .lbl{font-size:13px; color:#55665C;}
+
+  .eval{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;}
+  .box{border:2px solid var(--gold); border-radius:9px; padding:16px 18px;}
+  .box.cream{background:var(--cream);} .box.green{background:var(--lightg);}
+  .box .line{color:var(--green); font-weight:700; margin:10px 0 4px;}
+  .box textarea{width:100%; border:1px dashed #b9c7bd; border-radius:6px; background:#fff; font-family:inherit; font-size:14px; padding:7px; resize:vertical; min-height:44px; color:var(--ink);}
+  .box textarea:focus{outline:none; border-color:var(--gold);}
+  .dua{font-style:italic; color:var(--green2); font-size:15px; background:#fff; border-radius:6px; padding:8px 10px;}
+  .checks{display:flex; flex-wrap:wrap; gap:14px; font-size:14px; margin:4px 0;}
+  .checks label{display:flex; align-items:center; gap:5px; cursor:pointer;}
+  .week-stars{font-size:22px; letter-spacing:3px;}
+  .auto-num{width:52px; border:1px dashed #b9c7bd; border-radius:5px; text-align:center; font-family:inherit; background:#fffdf5; font-weight:700; color:var(--gold);}
+
+  .reminders{background:var(--cream); border:2px solid var(--gold); border-radius:9px; padding:18px 22px;}
+  .reminders h3{text-align:center; color:var(--green); margin:0 0 12px; font-size:18px;}
+  .reminders ul{margin:0; padding:0; list-style:none;}
+  .reminders li{padding:5px 0; font-size:14.5px;}
+  .reminders li::before{content:"◆"; color:var(--gold); margin-left:8px;}
+
+  .add-row{margin-top:8px; background:#fff; color:var(--green); border:1.5px dashed var(--green); border-radius:7px; padding:7px 14px; font-family:inherit; font-weight:600; cursor:pointer; font-size:13.5px;}
+  .add-row:hover{background:var(--lightg);}
+  .del-btn{background:none; border:none; color:#c0504d; cursor:pointer; font-size:16px; font-weight:700; line-height:1;}
+  .footer-dua{text-align:center; color:var(--gold); font-style:italic; margin-top:22px; font-size:15px;}
+
+  @media (max-width:820px){
+    .info,.eval,.stats{grid-template-columns:1fr 1fr;} .sheet{padding:22px 16px;} body{padding:8px 4px;} table{font-size:12px;}
+  }
+  @media print{
+    body{background:#fff; padding:0;} .toolbar,.add-row,.del-btn{display:none !important;}
+    .sheet{box-shadow:none; max-width:100%; border-radius:0;} @page{size:A4 landscape; margin:10mm;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar" id="toolbar">
+  <button class="gold" onclick="saveNow()">💾 حفظ</button>
+  <button onclick="archiveWeek()">📁 أرشفة هذا الأسبوع</button>
+  <select id="archiveSelect" onchange="loadArchived(this.value)"><option value="">— الأرشيف —</option></select>
+  <button class="ghost" onclick="deleteArchived()">🗑️ حذف من الأرشيف</button>
+  <button onclick="printSheet()">🖨️ طباعة / PDF</button>
+  <button class="ghost" onclick="exportJSON()">⬇️ تصدير</button>
+  <button class="ghost" onclick="document.getElementById('importFile').click()">⬆️ استيراد</button>
+  <button class="ghost" onclick="newWeek()">➕ أسبوع جديد</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+  <button class="ghost" onclick="lockApp()">🔒 قفل</button>
+  <span class="saved-note" id="savedNote"></span>
+  <span class="saved-note" id="cloudNote"></span>
+</div>
+
+<div class="sheet" id="sheet">
+  <div style="text-align:center; margin:0 0 6px;">
+    <svg width="80" height="80" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="مصحف" style="filter:drop-shadow(0 3px 5px rgba(0,0,0,.15));">
+      <defs>
+        <linearGradient id="cov" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#2E7D57"/><stop offset="1" stop-color="#1B5E3F"/>
+        </linearGradient>
+      </defs>
+      <rect x="16" y="16" width="70" height="94" rx="6" fill="#EFE7CE"/>
+      <rect x="20" y="12" width="66" height="98" rx="8" fill="url(#cov)" stroke="#14512F" stroke-width="1.5"/>
+      <rect x="78" y="12" width="8" height="98" rx="4" fill="#14512F" opacity=".45"/>
+      <rect x="28" y="20" width="50" height="82" rx="5" fill="none" stroke="#D4AF37" stroke-width="1.6"/>
+      <rect x="31.5" y="23.5" width="43" height="75" rx="4" fill="none" stroke="#D4AF37" stroke-width="0.8"/>
+      <g transform="translate(53,61)" fill="none" stroke="#D4AF37" stroke-width="1.8">
+        <rect x="-11" y="-11" width="22" height="22" rx="1.5"/>
+        <rect x="-11" y="-11" width="22" height="22" rx="1.5" transform="rotate(45)"/>
+      </g>
+      <circle cx="53" cy="61" r="3.2" fill="#D4AF37"/>
+      <g fill="#D4AF37">
+        <circle cx="34" cy="26" r="1.5"/><circle cx="72" cy="26" r="1.5"/>
+        <circle cx="34" cy="96" r="1.5"/><circle cx="72" cy="96" r="1.5"/>
+      </g>
+    </svg>
+  </div>
+  <p class="basmala">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+  <h1>جدول المتابعة الأسبوعي لحفظ القرآن الكريم</h1>
+  <p class="hadith">«خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ»</p>
+  <div class="divider">﴿ ❁ ﴾</div>
+
+  <div class="info">
+    <div class="field"><label>الطالبة:</label><input data-k="student" value="ياسمين"></div>
+    <div class="field"><label>الأسبوع:</label><input data-k="week" placeholder="من ____ إلى ____"></div>
+    <div class="field"><label>بداية الأسبوع:</label><input type="date" data-k="weekStart" onchange="autoDates()"></div>
+    <div class="field"><label>السورة / الجزء:</label><input data-k="surah" placeholder="________"></div>
+  </div>
+
+  <div class="progress-panel">
+    <div class="row">
+      <label>📖 التقدّم التراكمي في الحفظ —</label>
+      <label>عدد الصفحات المحفوظة:</label>
+      <input type="number" min="0" max="604" id="pagesInput" data-k="totalPages" oninput="updateProgress()">
+      <span class="prog-meta" id="juzMeta">≈ 0 جزء</span>
+      <label>آخر ما وصلت إليه:</label>
+      <input type="text" id="lastReached" data-k="lastReached" placeholder="مثال: سورة النساء، آية 50">
+    </div>
+    <div class="bar"><div id="barFill"></div><span id="barText">0%</span></div>
+  </div>
+
+  <div class="sec-title">أولاً: المتابعة اليومية</div>
+  <table id="dailyTable">
+    <colgroup>
+      <col style="width:11%"><col style="width:15%"><col style="width:8%"><col style="width:13%">
+      <col style="width:13%"><col style="width:9%"><col style="width:12%"><col style="width:19%">
+    </colgroup>
+    <thead><tr>
+      <th>اليوم / التاريخ</th><th>الحفظ الجديد (من – إلى)</th><th>التقدير</th>
+      <th>المراجعة القريبة</th><th>المراجعة البعيدة</th><th>الورد والأذكار</th>
+      <th>النجوم ⭐</th><th>ملاحظات التجويد</th>
+    </tr></thead>
+    <tbody id="dailyBody"></tbody>
+  </table>
+
+  <div class="legend">
+    <b>دليل التقدير:</b> ممتاز (بلا خطأ) — جيد جداً (1-2 خطأ) — جيد (3-4) — يُعاد (أكثر).
+    &nbsp;&nbsp; <b>النجوم:</b> ⭐ للحفظ المتقن + ⭐ للمراجعة + ⭐ للورد والأذكار + ⭐ للالتزام + ⭐ لتحسّن التجويد.
+    <br><span style="color:#8a8f8b">💡 اكتبي في خانة التقدير إحدى الكلمات (ممتاز/جيد جداً/جيد/يعاد) لتتلوّن الخانة تلقائياً.</span>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat"><div class="num" id="st_days">0</div><div class="lbl">أيام حفظ هذا الأسبوع</div></div>
+    <div class="stat"><div class="num" id="st_stars">0</div><div class="lbl">مجموع النجوم (من 35)</div></div>
+    <div class="stat"><div class="num" id="st_wird">0/7</div><div class="lbl">الالتزام بالورد والأذكار</div></div>
+    <div class="stat"><div class="num" id="st_excellent">0</div><div class="lbl">أيام «ممتاز»</div></div>
+  </div>
+
+  <div class="sec-title">ثانياً: أخطاء التجويد المتكررة وتعليم الأحكام</div>
+  <p class="sec-note">لرصد الأخطاء الشائعة والعمل على تصحيحها درساً بعد درس (إظهار، إدغام، مدود، غنّة، أحكام الراء واللام...).</p>
+  <table id="tajTable">
+    <colgroup><col style="width:24%"><col style="width:22%"><col style="width:30%"><col style="width:20%"><col style="width:4%"></colgroup>
+    <thead><tr>
+      <th>الخطأ الملاحظ</th><th>الحكم التجويدي</th><th>الكلمة / الموضع</th><th>هل تحسّن؟</th><th></th>
+    </tr></thead>
+    <tbody id="tajBody"></tbody>
+  </table>
+  <button class="add-row" onclick="addTajRow()">➕ إضافة صف</button>
+
+  <div class="sec-title">ثالثاً: التقييم الأسبوعي والدعاء</div>
+  <div class="eval">
+    <div class="box cream">
+      <div class="line">نجوم الأسبوع (تُحسب تلقائياً): <span class="week-stars" id="weekStars"></span> <input class="auto-num" data-k="weekStarNum" readonly> / 35</div>
+      <div class="line">تقدير الأسبوع العام:</div>
+      <div class="checks" id="weekGrade">
+        <label><input type="checkbox" data-k="g_mumtaz"> ممتاز</label>
+        <label><input type="checkbox" data-k="g_jj"> جيد جداً</label>
+        <label><input type="checkbox" data-k="g_jayed"> جيد</label>
+        <label><input type="checkbox" data-k="g_himma"> يحتاج همّة</label>
+      </div>
+      <div class="line">ملاحظة المعلّم التشجيعية:</div>
+      <textarea data-k="note" rows="3"></textarea>
+    </div>
+    <div class="box green">
+      <div class="line">هدف الأسبوع القادم:</div>
+      <textarea data-k="goal" rows="2"></textarea>
+      <div class="line">دعاء الأسبوع:</div>
+      <div class="dua">«اللّهُمَّ اجعَلِ القُرآنَ رَبيعَ قَلبِها، ونورَ صَدرِها، وجَلاءَ حُزنِها، وذَهابَ هَمِّها»</div>
+    </div>
+  </div>
+
+  <div class="sec-title">رابعاً: معينات على المداومة</div>
+  <div class="reminders">
+    <h3>معينات على معاهدة القرآن والمداومة عليه</h3>
+    <ul>
+      <li>ثبّتي وقتاً يومياً ثابتاً لا يتغيّر — بعد الفجر وقتٌ مبارك للحفظ.</li>
+      <li>الحفظ الجديد لا يُبنى إلا على مراجعة راسخة؛ لا تنتقلي حتى يثبت أمسِ.</li>
+      <li>كرّري المقطع الجديد 20 مرة نظراً قبل البدء بالحفظ عن ظهر قلب.</li>
+      <li>اربطي وردك بالأذكار: من حافظ على أذكاره حُفظ في قرآنه.</li>
+      <li>استمعي للمقطع بصوت قارئ متقن لتصحيح النطق والتجويد قبل الحفظ.</li>
+      <li>عند التعثّر: راجعي ولا تيأسي — «وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ».</li>
+    </ul>
+  </div>
+
+  <p class="footer-dua">نسأل الله أن يجعلها من أهل القرآن الذين هم أهل الله وخاصّته ♥</p>
+</div>
+
+<script>
+const KEY = "quran_tracker_yasmin_v2";
+const ARCH = "quran_tracker_yasmin_archive_v2";
+const days = ["الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت","الأحد"];
+const TOTAL_PAGES = 604;
+/* ===================== Supabase backend (cloud sync + PIN) ===================== */
+const SB_URL='https://vfyzedlyveukjaukcekq.supabase.co';
+const SB_KEY='sb_publishable_0rV81EKte4h5bhFyj6Nf4g_kDDLiDTD';
+const TRACKER_ID='yasmin';
+const PIN_KEY='quran_pin_yasmin';
+const TS_KEY='quran_saved_at_yasmin';
+let PIN = localStorage.getItem(PIN_KEY) || null;
+let cloudTimer=null;
+let applyingRemote=false;   // guard: don't re-upload while loading remote data
+
+async function rpc(fn, body){
+  const res=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify(body)});
+  const txt=await res.text();
+  if(!res.ok){ const e=new Error(txt||('HTTP '+res.status)); e.status=res.status; e.body=txt; throw e; }
+  return txt ? JSON.parse(txt) : null;
+}
+function isPinError(e){ return e && String(e.body||e.message||'').indexOf('INVALID_PIN')>-1; }
+function setCloud(status){
+  const n=document.getElementById('cloudNote'); if(!n) return;
+  const map={syncing:'⏳ يحفظ سحابياً…', synced:'☁️ متزامن', offline:'⚠️ غير متصل — سيُحفظ لاحقاً', locked:'🔒 مقفل', unsynced:'✳️ غير محفوظ سحابياً — أدخل الرمز'};
+  n.textContent=map[status]||''; n.dataset.s=status||'';
+}
+function localSavedAt(){ return +localStorage.getItem(TS_KEY) || 0; }
+function buildPayload(ts){ return {current:collect(), archive:getArchive(), savedAt:ts}; }
+
+function scheduleCloudSave(){
+  if(applyingRemote) return;                 // ignore saves caused by loading remote data
+  const ts=Date.now(); localStorage.setItem(TS_KEY, ts);   // stamp every local change
+  if(!PIN){ setCloud('unsynced'); return; }
+  clearTimeout(cloudTimer);
+  cloudTimer=setTimeout(()=>cloudSave(ts), 800);
+}
+async function cloudSave(ts){
+  if(!PIN){ setCloud('unsynced'); return; }
+  ts = ts || localSavedAt() || Date.now();
+  setCloud('syncing');
+  try{
+    await rpc('tracker_save', {p_id:TRACKER_ID, p_pin:PIN, p_data:buildPayload(ts)});
+    localStorage.setItem(TS_KEY, ts);
+    setCloud('synced');
+  }catch(e){
+    if(isPinError(e)){ PIN=null; localStorage.removeItem(PIN_KEY); openPinModal(true); }
+    else setCloud('offline');
+  }
+}
+function applyRemote(data){
+  applyingRemote=true;
+  try{
+    if(data.archive) localStorage.setItem(ARCH, JSON.stringify(data.archive));
+    buildDaily(); apply(data.current||{});
+    localStorage.setItem(KEY, JSON.stringify(data.current||collect()));
+    localStorage.setItem(TS_KEY, +data.savedAt || Date.now());
+    refreshArchiveList();
+  } finally { applyingRemote=false; }
+}
+async function cloudBoot(){
+  if(!PIN){ openPinModal(false); return; }
+  setCloud('syncing');
+  try{
+    const exists = await rpc('tracker_exists', {p_id:TRACKER_ID});
+    if(!exists){ await cloudSave(localSavedAt()||Date.now()); return; }
+    const data = await rpc('tracker_load', {p_id:TRACKER_ID, p_pin:PIN});
+    const remoteTs = +((data&&data.savedAt))||0, localTs=localSavedAt();
+    if(data && remoteTs>localTs){ applyRemote(data); setCloud('synced'); }   // cloud newer -> load
+    else if(localTs>remoteTs){ await cloudSave(localTs); }                    // local newer -> push
+    else setCloud('synced');
+  }catch(e){
+    if(isPinError(e)){ PIN=null; localStorage.removeItem(PIN_KEY); openPinModal(true); }
+    else setCloud('offline');
+  }
+}
+function lockApp(){ PIN=null; localStorage.removeItem(PIN_KEY); setCloud('locked'); openPinModal(false); }
+
+/* PIN modal */
+function openPinModal(wasWrong){
+  const m=document.getElementById('pinModal'); if(!m) return;
+  const err=document.getElementById('pinError');
+  err.style.display = wasWrong?'block':'none';
+  if(wasWrong) err.textContent='رمز غير صحيح، حاول مجدداً';
+  m.style.display='flex';
+  const inp=document.getElementById('pinInput'); inp.value=''; setTimeout(()=>inp.focus(),60);
+}
+function closePinModal(){ const m=document.getElementById('pinModal'); if(m) m.style.display='none'; }
+async function submitPin(){
+  const inp=document.getElementById('pinInput'); const err=document.getElementById('pinError');
+  const val=(inp.value||'').trim();
+  if(val.length<4){ err.textContent='الرمز 4 خانات على الأقل'; err.style.display='block'; return; }
+  PIN=val;
+  try{
+    const exists = await rpc('tracker_exists', {p_id:TRACKER_ID});
+    if(exists){
+      const data = await rpc('tracker_load', {p_id:TRACKER_ID, p_pin:PIN});   // throws if wrong
+      localStorage.setItem(PIN_KEY, PIN);
+      const remoteTs=+((data&&data.savedAt))||0, localTs=localSavedAt();
+      if(data && remoteTs>=localTs){ applyRemote(data); }
+      else { await cloudSave(localTs||Date.now()); }
+      closePinModal(); setCloud('synced');
+    }else{
+      localStorage.setItem(PIN_KEY, PIN); closePinModal();
+      await cloudSave(localSavedAt()||Date.now());
+    }
+  }catch(e){
+    if(isPinError(e)){ PIN=null; err.textContent='رمز غير صحيح، حاول مجدداً'; err.style.display='block'; }
+    else { localStorage.setItem(PIN_KEY, PIN); closePinModal(); setCloud('offline'); }
+  }
+}
+
+function starCell(val){
+  let s = '<span class="stars" data-stars="'+val+'">';
+  for(let i=1;i<=5;i++) s += '<span class="star'+(i<=val?' on':'')+'" data-v="'+i+'">★</span>';
+  return s+'</span>';
+}
+function buildDaily(){
+  const b = document.getElementById('dailyBody'); b.innerHTML='';
+  days.forEach((d,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="date-cell"><span class="day">'+d+'</span><br><span contenteditable data-k="d'+i+'_date"></span></td>'+
+      '<td contenteditable data-k="d'+i+'_new"></td>'+
+      '<td contenteditable class="grade-cell" data-k="d'+i+'_grade"></td>'+
+      '<td contenteditable data-k="d'+i+'_near"></td>'+
+      '<td contenteditable data-k="d'+i+'_far"></td>'+
+      '<td><input type="checkbox" class="wird" data-k="d'+i+'_wird" onchange="recalc()"></td>'+
+      '<td>'+starCell(0)+'<input type="hidden" data-k="d'+i+'_stars" value="0"></td>'+
+      '<td contenteditable data-k="d'+i+'_taj"></td>';
+    b.appendChild(tr);
+  });
+  bindStars();
+  document.querySelectorAll('.grade-cell').forEach(c=> c.addEventListener('input', ()=>{colorGrade(c); recalc();}));
+}
+
+function tajRowHTML(){
+  return '<td contenteditable></td><td contenteditable></td><td contenteditable></td>'+
+    '<td contenteditable></td><td><button class="del-btn" onclick="this.closest(\'tr\').remove();saveNow()">✕</button></td>';
+}
+function addTajRow(data){
+  const tr = document.createElement('tr'); tr.innerHTML = tajRowHTML();
+  if(data){ const c=tr.querySelectorAll('td[contenteditable]'); data.forEach((v,i)=>{if(c[i])c[i].innerHTML=v;}); }
+  document.getElementById('tajBody').appendChild(tr);
+}
+
+function colorGrade(td){
+  const t=(td.textContent||'').trim();
+  td.classList.remove('g-mumtaz','g-jj','g-jayed','g-redo');
+  if(!t) return;
+  if(t.indexOf('ممتاز')>-1) td.classList.add('g-mumtaz');
+  else if(t.indexOf('جداً')>-1||t.indexOf('جدا')>-1) td.classList.add('g-jj');
+  else if(t.indexOf('جيد')>-1) td.classList.add('g-jayed');
+  else if(t.indexOf('يعاد')>-1||t.indexOf('يُعاد')>-1||t.indexOf('يحتاج')>-1||t.indexOf('ضعيف')>-1) td.classList.add('g-redo');
+}
+
+function bindStars(){
+  document.querySelectorAll('#dailyBody .stars').forEach(sc=>{
+    sc.onclick = e=>{
+      if(!e.target.dataset.v) return;
+      const v=+e.target.dataset.v, cur=+sc.dataset.stars, nv=(v===cur)?v-1:v;
+      sc.dataset.stars=nv;
+      sc.querySelectorAll('.star').forEach(s=> s.classList.toggle('on', +s.dataset.v<=nv));
+      sc.parentElement.querySelector('input[type=hidden]').value=nv;
+      recalc(); saveNow();
+    };
+  });
+}
+document.getElementById('weekStars').innerHTML =
+  '<span class="stars" data-stars="0" id="wStars">'+[1,2,3,4,5].map(i=>'<span class="star" data-v="'+i+'">★</span>').join('')+'</span>';
+document.getElementById('wStars').onclick=e=>{
+  if(!e.target.dataset.v) return;
+  const sc=e.target.parentElement,v=+e.target.dataset.v,cur=+sc.dataset.stars,nv=(v===cur)?v-1:v;
+  sc.dataset.stars=nv; sc.querySelectorAll('.star').forEach(s=>s.classList.toggle('on',+s.dataset.v<=nv)); saveNow();
+};
+
+function recalc(){
+  let starSum=0, daysMem=0, wird=0, excellent=0;
+  for(let i=0;i<7;i++){
+    const st=+(document.querySelector('[data-k="d'+i+'_stars"]')||{}).value||0; starSum+=st;
+    const nw=(document.querySelector('[data-k="d'+i+'_new"]')||{}).textContent||''; if(nw.trim()) daysMem++;
+    if((document.querySelector('[data-k="d'+i+'_wird"]')||{}).checked) wird++;
+    const g=(document.querySelector('[data-k="d'+i+'_grade"]')||{}).textContent||''; if(g.indexOf('ممتاز')>-1) excellent++;
+  }
+  document.querySelector('[data-k="weekStarNum"]').value=starSum;
+  document.getElementById('st_days').textContent=daysMem;
+  document.getElementById('st_stars').textContent=starSum;
+  document.getElementById('st_wird').textContent=wird+'/7';
+  document.getElementById('st_excellent').textContent=excellent;
+}
+
+function updateProgress(){
+  let pg=+document.getElementById('pagesInput').value||0; if(pg>TOTAL_PAGES)pg=TOTAL_PAGES;
+  const pct=Math.round(pg/TOTAL_PAGES*100);
+  document.getElementById('barFill').style.width=pct+'%';
+  document.getElementById('barText').textContent=pct+'%  ('+pg+' / '+TOTAL_PAGES+' صفحة)';
+  document.getElementById('juzMeta').textContent='≈ '+(pg/20.13).toFixed(1)+' جزء';
+  saveNow();
+}
+
+function autoDates(){
+  const v=document.querySelector('[data-k="weekStart"]').value; if(!v) return;
+  const start=new Date(v+'T00:00:00');
+  for(let i=0;i<7;i++){
+    const d=new Date(start); d.setDate(start.getDate()+i);
+    const cell=document.querySelector('[data-k="d'+i+'_date"]');
+    if(cell) cell.textContent=('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2);
+  }
+  const wk=document.querySelector('[data-k="week"]');
+  const end=new Date(start); end.setDate(start.getDate()+6);
+  const f=x=>('0'+x.getDate()).slice(-2)+'/'+('0'+(x.getMonth()+1)).slice(-2);
+  wk.value='من '+f(start)+' إلى '+f(end);
+  saveNow();
+}
+
+let noteTimer;
+function flashSaved(msg){
+  const n=document.getElementById('savedNote');
+  n.textContent=msg||("✔ حُفِظ "+new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}));
+  clearTimeout(noteTimer); noteTimer=setTimeout(()=>n.textContent="",2600);
+}
+function collect(){
+  const data={fields:{}, taj:[]};
+  document.querySelectorAll('[data-k]').forEach(el=>{
+    const k=el.dataset.k;
+    if(el.type==='checkbox') data.fields[k]=el.checked;
+    else if(el.tagName==='INPUT'||el.tagName==='TEXTAREA') data.fields[k]=el.value;
+    else data.fields[k]=el.innerHTML;
+  });
+  document.querySelectorAll('#tajBody tr').forEach(tr=>{
+    data.taj.push([...tr.querySelectorAll('td[contenteditable]')].map(c=>c.innerHTML));
+  });
+  data.weekStars=document.getElementById('wStars').dataset.stars;
+  return data;
+}
+function saveNow(){ try{ localStorage.setItem(KEY, JSON.stringify(collect())); flashSaved(); scheduleCloudSave(); }catch(e){ alert('تعذّر الحفظ: '+e.message); } }
+function apply(data){
+  if(!data) return;
+  Object.entries(data.fields||{}).forEach(([k,v])=>{
+    const el=document.querySelector('[data-k="'+k+'"]'); if(!el) return;
+    if(el.type==='checkbox') el.checked=v;
+    else if(el.tagName==='INPUT'||el.tagName==='TEXTAREA') el.value=v;
+    else el.innerHTML=v;
+  });
+  for(let i=0;i<7;i++){
+    const hid=document.querySelector('[data-k="d'+i+'_stars"]');
+    if(hid){ const sc=hid.previousElementSibling; const v=+hid.value||0; sc.dataset.stars=v;
+      sc.querySelectorAll('.star').forEach(s=>s.classList.toggle('on',+s.dataset.v<=v)); }
+  }
+  const tb=document.getElementById('tajBody'); tb.innerHTML='';
+  (data.taj&&data.taj.length?data.taj:[[],[],[],[],[]]).forEach(rowData=>addTajRow(rowData));
+  const ws=document.getElementById('wStars'); const wv=+data.weekStars||0;
+  ws.dataset.stars=wv; ws.querySelectorAll('.star').forEach(s=>s.classList.toggle('on',+s.dataset.v<=wv));
+  document.querySelectorAll('.grade-cell').forEach(colorGrade);
+  updateProgress(); recalc();
+}
+
+function getArchive(){ try{ return JSON.parse(localStorage.getItem(ARCH))||{}; }catch(e){ return {}; } }
+function refreshArchiveList(sel){
+  const arch=getArchive(); const dd=document.getElementById('archiveSelect');
+  dd.innerHTML='<option value="">— الأرشيف ('+Object.keys(arch).length+') —</option>';
+  Object.entries(arch).sort((a,b)=>b[1].savedAt-a[1].savedAt).forEach(([id,o])=>{
+    const opt=document.createElement('option'); opt.value=id; opt.textContent=o.label; dd.appendChild(opt);
+  });
+  if(sel) dd.value=sel;
+}
+function archiveWeek(){
+  const wk=(document.querySelector('[data-k="week"]').value||'').trim();
+  const label=(wk||('أسبوع '+new Date().toLocaleDateString('ar-EG')));
+  const id='w_'+Date.now();
+  const arch=getArchive(); arch[id]={label, savedAt:Date.now(), data:collect()};
+  localStorage.setItem(ARCH, JSON.stringify(arch));
+  refreshArchiveList(id); flashSaved('📁 أُضيف للأرشيف');
+}
+function loadArchived(id){
+  if(!id) return;
+  const o=getArchive()[id]; if(!o) return;
+  if(!confirm('فتح «'+o.label+'» سيستبدل التعبئة الحالية. (احفظ/أرشف الحالي أولاً). متابعة؟')){ refreshArchiveList(); return; }
+  buildDaily(); apply(o.data); saveNow();
+}
+function deleteArchived(){
+  const dd=document.getElementById('archiveSelect'); const id=dd.value;
+  if(!id){ alert('اختر أسبوعاً من قائمة الأرشيف أولاً.'); return; }
+  const arch=getArchive(); const lbl=arch[id]?arch[id].label:'';
+  if(!confirm('حذف «'+lbl+'» من الأرشيف نهائياً؟')) return;
+  delete arch[id]; localStorage.setItem(ARCH, JSON.stringify(arch)); refreshArchiveList(); flashSaved('🗑️ حُذف');
+}
+
+function exportJSON(){
+  const payload={current:collect(), archive:getArchive()};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='حفظ_'+(document.querySelector('[data-k=student]').value||'ياسمين')+'.json'; a.click();
+}
+function importJSON(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=e=>{ try{
+      const obj=JSON.parse(e.target.result);
+      if(obj.archive){ localStorage.setItem(ARCH, JSON.stringify(obj.archive)); refreshArchiveList(); }
+      buildDaily(); apply(obj.current||obj); saveNow(); alert('تم الاستيراد بنجاح');
+    }catch(err){ alert('ملف غير صالح'); } };
+  rd.readAsText(f); ev.target.value='';
+}
+function newWeek(){
+  if(!confirm('بدء أسبوع جديد سيمسح التعبئة الحالية فقط (الأرشيف يبقى محفوظاً). أرشف الأسبوع الحالي أولاً إن أردت. متابعة؟')) return;
+  const student=document.querySelector('[data-k=student]').value;
+  const pages=document.getElementById('pagesInput').value;
+  const last=document.getElementById('lastReached').value;
+  localStorage.removeItem(KEY); buildDaily();
+  apply({fields:{student:student, totalPages:pages, lastReached:last}, taj:[[],[],[],[],[]], weekStars:0});
+  saveNow();
+}
+function printSheet(){ window.print(); }
+
+buildDaily();
+let stored=null; try{ stored=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
+if(stored) apply(stored); else { [0,0,0,0,0].forEach(()=>addTajRow()); updateProgress(); recalc(); }
+refreshArchiveList();
+let sTimer; function debouncedSave(){ clearTimeout(sTimer); sTimer=setTimeout(saveNow,700); }
+document.addEventListener('input', e=>{ if(e.target.matches('input,textarea')||e.target.isContentEditable) debouncedSave(); });
+cloudBoot();
+</script>
+
+<div id="pinModal" style="display:none; position:fixed; inset:0; background:rgba(20,40,30,.55); z-index:100; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:14px; padding:26px 28px; width:min(90vw,360px); text-align:center; box-shadow:0 12px 40px rgba(0,0,0,.3); border-top:5px solid #B8860B;">
+    <div style="font-size:30px;">🔒📖</div>
+    <h2 style="color:#1B5E3F; margin:8px 0 4px; font-size:20px;">رمز الدخول</h2>
+    <p style="color:#55665C; font-size:13.5px; margin:0 0 14px; line-height:1.5;">أدخلي رمز الدخول للمزامنة السحابية.<br>أول مرة؟ اختاري رمزاً جديداً (4 خانات فأكثر) وسيُحفظ تلقائياً.</p>
+    <input id="pinInput" type="password" inputmode="numeric" autocomplete="off"
+      onkeydown="if(event.key==='Enter')submitPin()"
+      style="width:100%; padding:11px; font-size:18px; text-align:center; letter-spacing:4px; border:1.5px solid #2E7D57; border-radius:9px; font-family:inherit; box-sizing:border-box;">
+    <div id="pinError" style="display:none; color:#B4544F; font-size:13px; margin-top:8px;">رمز غير صحيح، حاول مجدداً</div>
+    <button onclick="submitPin()" style="margin-top:14px; width:100%; background:#1B5E3F; color:#fff; border:none; border-radius:9px; padding:11px; font-family:inherit; font-weight:700; font-size:15px; cursor:pointer;">دخول ✓</button>
+  </div>
+</div>
+
+</body>
+</html>
