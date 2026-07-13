@@ -133,7 +133,6 @@
   <button class="ghost" onclick="document.getElementById('importFile').click()">⬆️ استيراد</button>
   <button class="ghost" onclick="newWeek()">➕ أسبوع جديد</button>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
-  <button class="ghost" onclick="lockApp()">🔒 قفل</button>
   <span class="saved-note" id="savedNote"></span>
   <span class="saved-note" id="cloudNote"></span>
 </div>
@@ -267,16 +266,14 @@ const KEY = "quran_tracker_yasmin_v2";
 const ARCH = "quran_tracker_yasmin_archive_v2";
 const days = ["الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت","الأحد"];
 const TOTAL_PAGES = 604;
-/* ===================== Supabase backend (cloud sync + PIN) ===================== */
+/* ===================== Supabase backend (open cloud sync — no PIN) ===================== */
 const SB_URL='https://vfyzedlyveukjaukcekq.supabase.co';
 const SB_KEY='sb_publishable_0rV81EKte4h5bhFyj6Nf4g_kDDLiDTD';
 const TRACKER_ID='yasmin';
-const PIN_KEY='quran_pin_yasmin';
 const TS_KEY='quran_saved_at_yasmin';
-let PIN = localStorage.getItem(PIN_KEY) || null;
 let cloudTimer=null;
 let applyingRemote=false;   // guard: don't re-upload while loading remote data
-let booting=true;           // guard: ignore automatic saves during initial load/login
+let booting=true;           // guard: ignore automatic saves during initial load
 
 async function rpc(fn, body){
   const res=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',
@@ -286,34 +283,28 @@ async function rpc(fn, body){
   if(!res.ok){ const e=new Error(txt||('HTTP '+res.status)); e.status=res.status; e.body=txt; throw e; }
   return txt ? JSON.parse(txt) : null;
 }
-function isPinError(e){ return e && String(e.body||e.message||'').indexOf('INVALID_PIN')>-1; }
 function setCloud(status){
   const n=document.getElementById('cloudNote'); if(!n) return;
-  const map={syncing:'⏳ يحفظ سحابياً…', synced:'☁️ متزامن', offline:'⚠️ غير متصل — سيُحفظ لاحقاً', locked:'🔒 مقفل', unsynced:'✳️ غير محفوظ سحابياً — أدخل الرمز'};
+  const map={syncing:'⏳ يحفظ…', synced:'☁️ متزامن', offline:'⚠️ غير متصل — سيُحفظ لاحقاً'};
   n.textContent=map[status]||''; n.dataset.s=status||'';
 }
 function localSavedAt(){ return +localStorage.getItem(TS_KEY) || 0; }
 function buildPayload(ts){ return {current:collect(), archive:getArchive(), savedAt:ts}; }
 
 function scheduleCloudSave(){
-  if(applyingRemote||booting) return;        // ignore saves during remote-load or initial boot/login
-  const ts=Date.now(); localStorage.setItem(TS_KEY, ts);   // stamp every local change
-  if(!PIN){ setCloud('unsynced'); return; }
+  if(applyingRemote||booting) return;        // ignore remote-load and initial-boot saves
+  const ts=Date.now(); localStorage.setItem(TS_KEY, ts);
   clearTimeout(cloudTimer);
   cloudTimer=setTimeout(()=>cloudSave(ts), 800);
 }
 async function cloudSave(ts){
-  if(!PIN){ setCloud('unsynced'); return; }
   ts = ts || localSavedAt() || Date.now();
   setCloud('syncing');
   try{
-    await rpc('tracker_save', {p_id:TRACKER_ID, p_pin:PIN, p_data:buildPayload(ts)});
+    await rpc('tracker_save', {p_id:TRACKER_ID, p_data:buildPayload(ts)});
     localStorage.setItem(TS_KEY, ts);
     setCloud('synced');
-  }catch(e){
-    if(isPinError(e)){ PIN=null; localStorage.removeItem(PIN_KEY); openPinModal(true); }
-    else setCloud('offline');
-  }
+  }catch(e){ setCloud('offline'); }
 }
 function applyRemote(data){
   applyingRemote=true;
@@ -326,55 +317,16 @@ function applyRemote(data){
   } finally { applyingRemote=false; }
 }
 async function cloudBoot(){
-  if(!PIN){ openPinModal(false); return; }
   setCloud('syncing');
   try{
-    const exists = await rpc('tracker_exists', {p_id:TRACKER_ID});
-    if(!exists){ await cloudSave(localSavedAt()||Date.now()); return; }
-    const data = await rpc('tracker_load', {p_id:TRACKER_ID, p_pin:PIN});
+    const data = await rpc('tracker_load', {p_id:TRACKER_ID});
     const remoteTs = +((data&&data.savedAt))||0, localTs=localSavedAt();
     if(data && remoteTs>localTs){ applyRemote(data); setCloud('synced'); }   // cloud newer -> load
     else if(localTs>remoteTs){ await cloudSave(localTs); }                    // local newer -> push
-    else setCloud('synced');
-  }catch(e){
-    if(isPinError(e)){ PIN=null; localStorage.removeItem(PIN_KEY); openPinModal(true); return; }
-    setCloud('offline');
-  } finally { booting=false; }
-}
-function lockApp(){ PIN=null; localStorage.removeItem(PIN_KEY); setCloud('locked'); openPinModal(false); }
-
-/* PIN modal */
-function openPinModal(wasWrong){
-  const m=document.getElementById('pinModal'); if(!m) return;
-  const err=document.getElementById('pinError');
-  err.style.display = wasWrong?'block':'none';
-  if(wasWrong) err.textContent='رمز غير صحيح، حاول مجدداً';
-  m.style.display='flex';
-  const inp=document.getElementById('pinInput'); inp.value=''; setTimeout(()=>inp.focus(),60);
-}
-function closePinModal(){ const m=document.getElementById('pinModal'); if(m) m.style.display='none'; }
-async function submitPin(){
-  const inp=document.getElementById('pinInput'); const err=document.getElementById('pinError');
-  const val=(inp.value||'').trim();
-  if(val.length<4){ err.textContent='الرمز 4 خانات على الأقل'; err.style.display='block'; return; }
-  PIN=val;
-  try{
-    const exists = await rpc('tracker_exists', {p_id:TRACKER_ID});
-    if(exists){
-      const data = await rpc('tracker_load', {p_id:TRACKER_ID, p_pin:PIN});   // throws if wrong
-      localStorage.setItem(PIN_KEY, PIN);
-      const remoteTs=+((data&&data.savedAt))||0, localTs=localSavedAt();
-      if(data && remoteTs>=localTs){ applyRemote(data); }
-      else { await cloudSave(localTs||Date.now()); }
-      booting=false; closePinModal(); setCloud('synced');
-    }else{
-      localStorage.setItem(PIN_KEY, PIN); booting=false; closePinModal();
-      await cloudSave(localSavedAt()||Date.now());
-    }
-  }catch(e){
-    if(isPinError(e)){ PIN=null; err.textContent='رمز غير صحيح، حاول مجدداً'; err.style.display='block'; }
-    else { localStorage.setItem(PIN_KEY, PIN); booting=false; closePinModal(); setCloud('offline'); }
-  }
+    else if(data){ setCloud('synced'); }
+    else { await cloudSave(localTs||Date.now()); }                            // no row yet -> create
+  }catch(e){ setCloud('offline'); }
+  finally { booting=false; }
 }
 
 function starCell(val){
@@ -590,18 +542,6 @@ document.addEventListener('input', e=>{ if(e.target.matches('input,textarea')||e
 if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', cloudBoot); } else { cloudBoot(); }
 </script>
 
-<div id="pinModal" style="display:none; position:fixed; inset:0; background:rgba(20,40,30,.55); z-index:100; align-items:center; justify-content:center;">
-  <div style="background:#fff; border-radius:14px; padding:26px 28px; width:min(90vw,360px); text-align:center; box-shadow:0 12px 40px rgba(0,0,0,.3); border-top:5px solid #B8860B;">
-    <div style="font-size:30px;">🔒📖</div>
-    <h2 style="color:#1B5E3F; margin:8px 0 4px; font-size:20px;">رمز الدخول</h2>
-    <p style="color:#55665C; font-size:13.5px; margin:0 0 14px; line-height:1.5;">أدخلي رمز الدخول للمزامنة السحابية.<br>أول مرة؟ اختاري رمزاً جديداً (4 خانات فأكثر) وسيُحفظ تلقائياً.</p>
-    <input id="pinInput" type="password" inputmode="numeric" autocomplete="off"
-      onkeydown="if(event.key==='Enter')submitPin()"
-      style="width:100%; padding:11px; font-size:18px; text-align:center; letter-spacing:4px; border:1.5px solid #2E7D57; border-radius:9px; font-family:inherit; box-sizing:border-box;">
-    <div id="pinError" style="display:none; color:#B4544F; font-size:13px; margin-top:8px;">رمز غير صحيح، حاول مجدداً</div>
-    <button onclick="submitPin()" style="margin-top:14px; width:100%; background:#1B5E3F; color:#fff; border:none; border-radius:9px; padding:11px; font-family:inherit; font-weight:700; font-size:15px; cursor:pointer;">دخول ✓</button>
-  </div>
-</div>
 
 </body>
 </html>
