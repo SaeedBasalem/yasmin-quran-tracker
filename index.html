@@ -585,7 +585,8 @@ if(stored) apply(stored); else { [0,0,0,0,0].forEach(()=>addTajRow()); updatePro
 refreshArchiveList();
 let sTimer; function debouncedSave(){ clearTimeout(sTimer); sTimer=setTimeout(saveNow,700); }
 document.addEventListener('input', e=>{ if(e.target.matches('input,textarea')||e.target.isContentEditable) debouncedSave(); });
-cloudBoot();
+// Defer cloud boot until the whole DOM (incl. PIN modal below this script) is parsed
+if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', cloudBoot); } else { cloudBoot(); }
 </script>
 
 <div id="pinModal" style="display:none; position:fixed; inset:0; background:rgba(20,40,30,.55); z-index:100; align-items:center; justify-content:center;">
