@@ -276,6 +276,7 @@ const TS_KEY='quran_saved_at_yasmin';
 let PIN = localStorage.getItem(PIN_KEY) || null;
 let cloudTimer=null;
 let applyingRemote=false;   // guard: don't re-upload while loading remote data
+let booting=true;           // guard: ignore automatic saves during initial load/login
 
 async function rpc(fn, body){
   const res=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',
@@ -295,7 +296,7 @@ function localSavedAt(){ return +localStorage.getItem(TS_KEY) || 0; }
 function buildPayload(ts){ return {current:collect(), archive:getArchive(), savedAt:ts}; }
 
 function scheduleCloudSave(){
-  if(applyingRemote) return;                 // ignore saves caused by loading remote data
+  if(applyingRemote||booting) return;        // ignore saves during remote-load or initial boot/login
   const ts=Date.now(); localStorage.setItem(TS_KEY, ts);   // stamp every local change
   if(!PIN){ setCloud('unsynced'); return; }
   clearTimeout(cloudTimer);
@@ -336,9 +337,9 @@ async function cloudBoot(){
     else if(localTs>remoteTs){ await cloudSave(localTs); }                    // local newer -> push
     else setCloud('synced');
   }catch(e){
-    if(isPinError(e)){ PIN=null; localStorage.removeItem(PIN_KEY); openPinModal(true); }
-    else setCloud('offline');
-  }
+    if(isPinError(e)){ PIN=null; localStorage.removeItem(PIN_KEY); openPinModal(true); return; }
+    setCloud('offline');
+  } finally { booting=false; }
 }
 function lockApp(){ PIN=null; localStorage.removeItem(PIN_KEY); setCloud('locked'); openPinModal(false); }
 
@@ -365,14 +366,14 @@ async function submitPin(){
       const remoteTs=+((data&&data.savedAt))||0, localTs=localSavedAt();
       if(data && remoteTs>=localTs){ applyRemote(data); }
       else { await cloudSave(localTs||Date.now()); }
-      closePinModal(); setCloud('synced');
+      booting=false; closePinModal(); setCloud('synced');
     }else{
-      localStorage.setItem(PIN_KEY, PIN); closePinModal();
+      localStorage.setItem(PIN_KEY, PIN); booting=false; closePinModal();
       await cloudSave(localSavedAt()||Date.now());
     }
   }catch(e){
     if(isPinError(e)){ PIN=null; err.textContent='رمز غير صحيح، حاول مجدداً'; err.style.display='block'; }
-    else { localStorage.setItem(PIN_KEY, PIN); closePinModal(); setCloud('offline'); }
+    else { localStorage.setItem(PIN_KEY, PIN); booting=false; closePinModal(); setCloud('offline'); }
   }
 }
 
