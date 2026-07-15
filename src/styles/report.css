@@ -12,6 +12,7 @@
   color: #2a2118;
   font-family: 'Segoe UI', 'Tahoma', Arial, sans-serif;
   direction: rtl;
+  line-height: 1.7;
   padding: 46px 44px;
   position: relative;
 }
@@ -266,19 +267,22 @@
   background: #fff;
   border: 1px solid #e4d7ad;
   border-radius: 10px;
-  padding: 14px 16px;
-  min-height: 78px;
+  padding: 18px 16px 16px;
+  min-height: 88px;
 }
 .rep-notes .note .h {
   color: #b8860b;
   font-weight: 800;
   font-size: 13.5px;
-  margin-bottom: 6px;
+  line-height: 1.9;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #f0e6c6;
 }
 .rep-notes .note .b {
   font-size: 14px;
   color: #3a2f20;
-  line-height: 1.7;
+  line-height: 1.9;
   white-space: pre-wrap;
 }
 
