@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from 'react'
 import type { Archive, CloudStatus, TrackerPayload, WeekState } from '@/types'
 import { createEmptyWeek, emptyTajweedRow } from '@/lib/constants'
@@ -45,6 +46,10 @@ interface TrackerContextValue {
   newWeek: () => void
   exportJSON: () => void
   importJSON: (file: File) => Promise<void>
+  /** مرجع عنصر تقرير الأسبوع (يُلتقط عند التصدير إلى PDF). */
+  reportRef: RefObject<HTMLDivElement>
+  /** تصدير تقرير الأسبوع الحالي ملفَّ PDF للطالبة. */
+  exportReportPdf: () => Promise<void>
   flash: (msg?: string) => void
 }
 
@@ -66,6 +71,7 @@ export function TrackerProvider({ children }: { children: ReactNode }) {
   // حرّاس تمنع إعادة الرفع أثناء تحميل بيانات السحابة، وتجاهل الحفظ أثناء الإقلاع.
   const applyingRemote = useRef(false)
   const booting = useRef(true)
+  const reportRef = useRef<HTMLDivElement>(null)
   const cloudTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -250,6 +256,20 @@ export function TrackerProvider({ children }: { children: ReactNode }) {
     [flash],
   )
 
+  const exportReportPdf = useCallback(async () => {
+    const node = reportRef.current
+    if (!node) return
+    flash('📄 يجري إنشاء التقرير…')
+    try {
+      const { exportElementToPdf } = await import('@/lib/pdf')
+      const safe = (week.week || new Date().toLocaleDateString('en-CA')).replace(/[\\/:*?"<>|]/g, '-')
+      await exportElementToPdf(node, `تقرير_ياسمين_${safe}.pdf`)
+      flash('✅ تم حفظ تقرير الأسبوع')
+    } catch {
+      flash('⚠️ تعذّر إنشاء التقرير')
+    }
+  }, [week.week, flash])
+
   const value = useMemo<TrackerContextValue>(
     () => ({
       week,
@@ -268,6 +288,8 @@ export function TrackerProvider({ children }: { children: ReactNode }) {
       newWeek,
       exportJSON,
       importJSON,
+      reportRef,
+      exportReportPdf,
       flash,
     }),
     [
@@ -287,6 +309,7 @@ export function TrackerProvider({ children }: { children: ReactNode }) {
       newWeek,
       exportJSON,
       importJSON,
+      exportReportPdf,
       flash,
     ],
   )

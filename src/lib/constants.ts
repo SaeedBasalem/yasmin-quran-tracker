@@ -1,5 +1,11 @@
 import type { DayRow, TajweedRow, WeekState } from '@/types'
 
+/** اسم الطالبة (ثابت — يُعرض في الترويسة والتقرير). */
+export const STUDENT_NAME = 'ياسمين'
+
+/** اسم المعلّم (يُعرض في تقرير الأسبوع). */
+export const TEACHER_NAME = 'أ. سعيد'
+
 /** إجمالي صفحات المصحف (طبعة المدينة). */
 export const TOTAL_PAGES = 604
 

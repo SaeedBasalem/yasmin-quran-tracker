@@ -1,19 +1,11 @@
 import { useTracker } from '@/store/tracker-store'
 
-/** بطاقات معلومات الطالبة والأسبوع. */
+/** بطاقات معلومات الأسبوع (اسم الطالبة يظهر في الترويسة). */
 export function StudentInfo() {
   const { week, patchWeek, setWeekStart } = useTracker()
 
   return (
-    <div className="info">
-      <div className="field">
-        <label htmlFor="f-student">الطالبة:</label>
-        <input
-          id="f-student"
-          value={week.student}
-          onChange={(e) => patchWeek({ student: e.target.value })}
-        />
-      </div>
+    <div className="info info-3">
       <div className="field">
         <label htmlFor="f-week">الأسبوع:</label>
         <input

@@ -22,6 +22,7 @@ export function Toolbar() {
     newWeek,
     exportJSON,
     importJSON,
+    exportReportPdf,
   } = useTracker()
   const fileRef = useRef<HTMLInputElement>(null)
   const selectRef = useRef<HTMLSelectElement>(null)
@@ -68,6 +69,9 @@ export function Toolbar() {
     <div className="toolbar" id="toolbar">
       <button className="gold" onClick={() => flash()}>
         💾 حفظ
+      </button>
+      <button className="report-btn" onClick={() => void exportReportPdf()}>
+        📄 تقرير الأسبوع (PDF)
       </button>
       <button onClick={archiveWeek}>📁 أرشفة هذا الأسبوع</button>
       <select

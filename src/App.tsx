@@ -10,6 +10,7 @@ import { WeeklyEvaluation } from '@/components/WeeklyEvaluation'
 import { Reminders } from '@/components/Reminders'
 import { SurahDatalist } from '@/components/SurahDatalist'
 import { GradeDatalist } from '@/components/GradeDatalist'
+import { WeeklyReport } from '@/components/WeeklyReport'
 
 export default function App() {
   return (
@@ -30,6 +31,10 @@ export default function App() {
       </main>
       <SurahDatalist />
       <GradeDatalist />
+      {/* تقرير الأسبوع — يُركّب خارج الشاشة ويُلتقط عند التصدير إلى PDF */}
+      <div className="report-offscreen" aria-hidden="true">
+        <WeeklyReport />
+      </div>
     </TrackerProvider>
   )
 }
